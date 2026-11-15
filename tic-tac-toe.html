@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tic Tac Toe — Arcade</title>
+<style>
+:root{color-scheme:dark;--bg:#0b1020;--panel:#151c32;--line:#38435f;--x:#74e3ff;--o:#ffcb78;--text:#f5f7ff;--muted:#a1abc4}*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:22px;background:radial-gradient(circle at 50% 0%,#283458 0%,#11172c 42%,var(--bg) 100%);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:var(--text)}.shell{width:min(100%,510px);padding:30px 24px 24px;background:linear-gradient(155deg,#1b2440,#12192e);border:1px solid #3c4766;border-radius:28px;box-shadow:0 24px 65px #02061399;text-align:center}.eyebrow{font-size:.72rem;font-weight:800;letter-spacing:.24em;color:#9aa9d8;margin:0 0 4px}.title{font-size:clamp(2rem,6vw,3rem);margin:0 0 6px;letter-spacing:-.06em}.subtitle{color:var(--muted);font-size:.91rem;margin:0 0 23px}.scoreboard{display:flex;gap:9px;margin-bottom:21px}.score{flex:1;background:#0e1529;border:1px solid #34405d;border-radius:15px;padding:11px 5px}.score strong{display:block;font-size:1.55rem}.score span{font-size:.74rem;color:var(--muted);font-weight:700;letter-spacing:.04em}.score.x strong{color:var(--x)}.score.o strong{color:var(--o)}.status{font-weight:800;letter-spacing:.01em;margin:0 0 17px;min-height:26px;font-size:1.08rem}.status .x{color:var(--x)}.status .o{color:var(--o)}.board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:12px;border:1px solid #435071;border-radius:23px;background:#0b1225;transition:background .3s ease,border-color .3s ease,box-shadow .3s ease}.board.draw{background:#a8273c;border-color:#ff6375;box-shadow:0 0 0 4px #c13b5044,0 0 45px #e1304b44}.cell{appearance:none;aspect-ratio:1;background:#202b47;border:1px solid #3b4a6a;border-radius:15px;display:grid;place-items:center;font-size:clamp(3rem,11vw,5rem);font-weight:900;line-height:1;cursor:pointer;transition:transform .12s,background .15s,border-color .15s;user-select:none}.cell:focus-visible{outline:3px solid white;outline-offset:2px}.cell:enabled:hover{background:#303d60;transform:scale(1.035)}.cell:disabled{cursor:default}.cell.mark-x{color:var(--x);text-shadow:0 0 20px #74e3ff50}.cell.mark-o{color:var(--o);text-shadow:0 0 20px #ffcb7850}.cell.win{background:#315247;border-color:#77e8aa;animation:pulse .8s ease-in-out infinite alternate}.board.draw .cell{background:#c43c4e;border-color:#e57883;color:white;text-shadow:none}@keyframes pulse{to{filter:brightness(1.25);transform:scale(1.03)}}.buttons{display:flex;gap:10px;margin-top:22px}.action{font:inherit;font-weight:800;border-radius:12px;border:1px solid #65749b;cursor:pointer;padding:13px 12px;flex:1;color:white;background:#303e5c;transition:filter .15s,transform .15s}.action.primary{background:#f7ca63;color:#1d2030;border-color:#f7ca63}.action:hover{filter:brightness(1.1)}.action:active{transform:scale(.98)}.note{color:var(--muted);font-size:.76rem;margin:15px 0 0}canvas{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:5}@media(max-width:420px){.shell{padding:23px 14px}.board{gap:9px;padding:9px}.cell{border-radius:12px}.scoreboard{gap:6px}}
+@media(prefers-reduced-motion:reduce){.cell,.board,.action{transition:none}.cell.win{animation:none}}
+</style>
+</head>
+<body>
+<main class="shell">
+  <p class="eyebrow">CLASSIC ARCADE</p>
+  <h1 class="title">Tic Tac Toe</h1>
+  <p class="subtitle">Two players. One board. All bragging rights.</p>
+  <div class="scoreboard" aria-label="Scores">
+    <div class="score x"><span>PLAYER X</span><strong id="scoreX">0</strong></div>
+    <div class="score"><span>DRAWS</span><strong id="scoreD">0</strong></div>
+    <div class="score o"><span>PLAYER O</span><strong id="scoreO">0</strong></div>
+  </div>
+  <p class="status" id="status" role="status" aria-live="polite"><span class="x">X</span>'s turn</p>
+  <div class="board" id="board" role="group" aria-label="Tic tac toe board">
+    <button class="cell" data-index="0" aria-label="Row 1, column 1"></button>
+    <button class="cell" data-index="1" aria-label="Row 1, column 2"></button>
+    <button class="cell" data-index="2" aria-label="Row 1, column 3"></button>
+    <button class="cell" data-index="3" aria-label="Row 2, column 1"></button>
+    <button class="cell" data-index="4" aria-label="Row 2, column 2"></button>
+    <button class="cell" data-index="5" aria-label="Row 2, column 3"></button>
+    <button class="cell" data-index="6" aria-label="Row 3, column 1"></button>
+    <button class="cell" data-index="7" aria-label="Row 3, column 2"></button>
+    <button class="cell" data-index="8" aria-label="Row 3, column 3"></button>
+  </div>
+  <div class="buttons"><button class="action primary" id="again">Play Again</button><button class="action" id="reset">Reset Scores</button></div>
+  <p class="note">Take turns placing X and O. Get three in a row to win.</p>
+</main>
+<canvas id="confetti" aria-hidden="true"></canvas>
+<script>
+(() => {
+  'use strict';
+  const WIN_LINES=[[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+  const cells=[...document.querySelectorAll('.cell')];
+  const boardElement=document.getElementById('board');
+  const status=document.getElementById('status');
+  const scoreX=document.getElementById('scoreX');
+  const scoreO=document.getElementById('scoreO');
+  const scoreD=document.getElementById('scoreD');
+  const canvas=document.getElementById('confetti');
+  const ctx=canvas.getContext('2d');
+  let board=Array(9).fill(''),player='X',over=false,scores={X:0,O:0,D:0};
+  let pieces=[],frame=0,animationId=null;
+  function stopConfetti(){if(animationId!==null)cancelAnimationFrame(animationId);animationId=null;ctx.clearRect(0,0,canvas.width,canvas.height);pieces=[];}
+  function resizeCanvas(){const dpr=Math.min(window.devicePixelRatio||1,2);canvas.width=Math.round(window.innerWidth*dpr);canvas.height=Math.round(window.innerHeight*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);}
+  function celebrate(){
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+    stopConfetti();resizeCanvas();frame=0;
+    const colors=['#74e3ff','#ffcb78','#fb7a9a','#9ef5af','#cf9cff','#ffffff'];
+    pieces=Array.from({length:170},()=>({x:Math.random()*window.innerWidth,y:-20-Math.random()*window.innerHeight*.65,w:5+Math.random()*7,h:6+Math.random()*9,vx:(Math.random()-.5)*4,vy:2.5+Math.random()*3.5,rotation:Math.random()*6.3,spin:(Math.random()-.5)*.18,color:colors[Math.floor(Math.random()*colors.length)]}));
+    function draw(){ctx.clearRect(0,0,window.innerWidth,window.innerHeight);for(const p of pieces){p.x+=p.vx+Math.sin(frame*.035+p.y)*.4;p.y+=p.vy;p.rotation+=p.spin;ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.rotation);ctx.fillStyle=p.color;ctx.fillRect(-p.w/2,-p.h/2,p.w,p.h);ctx.restore();}frame++;if(frame<240){animationId=requestAnimationFrame(draw)}else{stopConfetti()}}draw();
+  }
+  function render(){
+    cells.forEach((cell,i)=>{cell.textContent=board[i];cell.classList.toggle('mark-x',board[i]==='X');cell.classList.toggle('mark-o',board[i]==='O');cell.disabled=over||Boolean(board[i]);cell.setAttribute('aria-label',`Row ${Math.floor(i/3)+1}, column ${i%3+1}${board[i]?', '+board[i]:', empty'}`)});
+    scoreX.textContent=scores.X;scoreO.textContent=scores.O;scoreD.textContent=scores.D;
+  }
+  function play(index){
+    if(over||board[index])return;
+    board[index]=player;
+    const winningLine=WIN_LINES.find(line=>line.every(i=>board[i]===player));
+    if(winningLine){over=true;scores[player]++;status.innerHTML=`🎉 <span class="${player.toLowerCase()}">${player}</span> wins!`;render();winningLine.forEach(i=>cells[i].classList.add('win'));celebrate();return;}
+    if(board.every(Boolean)){over=true;scores.D++;boardElement.classList.add('draw');status.textContent="It's a draw! 🤝";render();return;}
+    player=player==='X'?'O':'X';status.innerHTML=`<span class="${player.toLowerCase()}">${player}</span>'s turn`;render();
+  }
+  function newGame(){stopConfetti();board=Array(9).fill('');player='X';over=false;boardElement.classList.remove('draw');cells.forEach(c=>c.classList.remove('win'));status.innerHTML='<span class="x">X</span>\'s turn';render();}
+  cells.forEach(cell=>cell.addEventListener('click',()=>play(Number(cell.dataset.index))));
+  document.getElementById('again').addEventListener('click',newGame);
+  document.getElementById('reset').addEventListener('click',()=>{scores={X:0,O:0,D:0};newGame()});
+  window.addEventListener('resize',()=>{if(animationId!==null)resizeCanvas()});
+  render();
+})();
+</script>
+</body>
+</html>
